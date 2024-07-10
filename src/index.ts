@@ -1,126 +1,88 @@
-class School {
-  directions: Direction[] = [];
+//* Створіть класи Circle, Rectangle, Square і Triangle. У кожного з них є загальнодоступний метод calculateArea.
+//* У кожної фігури є загальнодоступні властивості - колір і назва, які не можна змінювати після створення.
+//* У Square і Rectangle зі свого боку є ще додатковий метод print, який виводить рядок із формулою розрахунку площі
 
-  addDirection(direction: Direction): void {
-    this.directions.push(direction);
+type Color = 'red' | 'green' | 'blue';
+type FigureName = 'Circle' | 'Rectangle' | 'Square' | 'Triangle';
+
+interface IFigure {
+  name: FigureName;
+  color: Color;
+  calculateArea(): number;
+}
+
+interface IPrintableFigure extends IFigure {
+  print(): void;
+}
+
+interface ICircle extends IFigure {
+  radius: number;
+}
+
+interface IRectangle extends IPrintableFigure {
+  width: number;
+  height: number;
+}
+
+interface ISquare extends IPrintableFigure {
+  side: number;
+}
+
+interface ITriangle extends IFigure {
+  base: number;
+  height: number;
+}
+
+abstract class Figure implements IFigure {
+  constructor(public readonly name: FigureName, public readonly color: Color) {}
+
+  public abstract calculateArea(): number;
+}
+
+class Circle extends Figure implements ICircle {
+  constructor(color: Color, public radius: number) {
+    super('Circle', color);
+  }
+
+  public calculateArea(): number {
+    return Math.PI * Math.pow(this.radius, 2);
   }
 }
 
-class Direction {
-  _name: string;
-  levels: Level[] = [];
-
-  constructor(name: string) {
-    this._name = name;
+class Rectangle extends Figure implements IRectangle {
+  constructor(color: Color, public width: number, public height: number) {
+    super('Rectangle', color);
   }
 
-  get name(): string {
-    return this._name;
+  public calculateArea(): number {
+    return this.width * this.height;
   }
 
-  addLevel(level: Level): void {
-    this.levels.push(level);
+  public print(): void {
+    console.log(`S = width * height`);
   }
 }
 
-class Level {
-  _name: string;
-  _program: string;
-  groups: Group[] = [];
-
-  constructor(name: string, program: string) {
-    this._name = name;
-    this._program = program;
+class Square extends Figure implements ISquare {
+  constructor(color: Color, public side: number) {
+    super('Square', color);
   }
 
-  get name(): string {
-    return this._name;
+  public calculateArea(): number {
+    return Math.pow(this.side, 2);
   }
 
-  get program(): string {
-    return this._program;
-  }
-
-  addGroup(group: Group): void {
-    this.groups.push(group);
+  public print(): void {
+    console.log(`S = side ^ 2`);
   }
 }
 
-class Group {
-  directionName: string;
-  levelName: string;
-  _students: Student[] = [];
-
-  constructor(directionName: string, levelName: string) {
-    this.directionName = directionName;
-    this.levelName = levelName;
+class Triangle extends Figure implements ITriangle {
+  constructor(color: Color, public base: number, public height: number) {
+    super('Triangle', color);
   }
 
-  get students(): Student[] {
-    return this._students;
-  }
-
-  addStudent(student: Student): void {
-    this._students.push(student);
-  }
-
-  showPerformance(): Student[] {
-    return this._students.toSorted(
-      (a, b) => b.getPerformanceRating() - a.getPerformanceRating()
-    );
+  public calculateArea(): number {
+    return 0.5 * this.base * this.height;
   }
 }
-
-class Student {
-  firstName: string;
-  lastName: string;
-  birthYear: number;
-  grades: any = {};
-  attendance: boolean[] = [];
-
-  constructor(firstName: string, lastName: string, birthYear: number) {
-    this.firstName = firstName;
-    this.lastName = lastName;
-    this.birthYear = birthYear;
-  }
-
-  get fullName(): string {
-    return `${this.lastName} ${this.firstName}`;
-  }
-
-  set fullName(value: string) {
-    [this.lastName, this.firstName] = value.split(" ");
-  }
-
-  get age(): number {
-    return new Date().getFullYear() - this.birthYear;
-  }
-
-  setGrade(subject: string, grade: number): void {
-    this.grades[subject] = grade;
-  }
-
-  markAttendance(present: boolean): void {
-    this.attendance.push(present);
-  }
-
-  getPerformanceRating(): number {
-    const gradeValues: any[] = Object.values(this.grades);
-
-    if (!gradeValues.length) {
-      return 0;
-    }
-
-    const averageGrade: number =
-      gradeValues.reduce((sum, grade) => sum + grade, 0) / gradeValues.length;
-
-    const attendancePercentage: number =
-      (this.attendance.filter((present) => present).length /
-        this.attendance.length) *
-      100;
-
-    return (averageGrade + attendancePercentage) / 2;
-  }
-}
-
-console.log('start');
