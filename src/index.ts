@@ -1,126 +1,54 @@
-class School {
-  directions: Direction[] = [];
+//* Визначте інтерфейс, який використовує сигнатуру індексу з типами об'єднання.
+//* Наприклад, тип значення для кожного ключа може бути число | рядок.
 
-  addDirection(direction: Direction): void {
-    this.directions.push(direction);
-  }
+interface IUnionInterface {
+  [key: string]: string | number;
 }
 
-class Direction {
-  _name: string;
-  levels: Level[] = [];
+//* Створіть інтерфейс, у якому типи значень у сигнатурі індексу є функціями.
+//* Ключами можуть бути рядки, а значеннями — функції, які приймають будь-які аргументи.
 
-  constructor(name: string) {
-    this._name = name;
-  }
-
-  get name(): string {
-    return this._name;
-  }
-
-  addLevel(level: Level): void {
-    this.levels.push(level);
-  }
+interface IFunctionInterface {
+  [key: string]: (...args: any[]) => any;
 }
 
-class Level {
-  _name: string;
-  _program: string;
-  groups: Group[] = [];
+//* Опишіть інтерфейс, який використовує сигнатуру індексу для опису об'єкта, подібного до масиву.
+//* Ключі повинні бути числами, а значення - певного типу.
 
-  constructor(name: string, program: string) {
-    this._name = name;
-    this._program = program;
-  }
-
-  get name(): string {
-    return this._name;
-  }
-
-  get program(): string {
-    return this._program;
-  }
-
-  addGroup(group: Group): void {
-    this.groups.push(group);
-  }
+interface IArrayInterface<T> {
+  [key: number]: T;
 }
 
-class Group {
-  directionName: string;
-  levelName: string;
-  _students: Student[] = [];
+//* Створіть інтерфейс з певними властивостями та індексною сигнатурою.
+//* Наприклад, ви можете мати властивості типу name: string та індексну сигнатуру для додаткових динамічних властивостей.
 
-  constructor(directionName: string, levelName: string) {
-    this.directionName = directionName;
-    this.levelName = levelName;
-  }
-
-  get students(): Student[] {
-    return this._students;
-  }
-
-  addStudent(student: Student): void {
-    this._students.push(student);
-  }
-
-  showPerformance(): Student[] {
-    return this._students.toSorted(
-      (a, b) => b.getPerformanceRating() - a.getPerformanceRating()
-    );
-  }
+interface IMixedUnionInterface {
+  name: string | number;
+  [key: string]: string | number;
 }
 
-class Student {
-  firstName: string;
-  lastName: string;
-  birthYear: number;
-  grades: any = {};
-  attendance: boolean[] = [];
+//* Створіть два інтерфейси, один з індексною сигнатурою, а інший розширює перший, додаючи специфічні властивості.
 
-  constructor(firstName: string, lastName: string, birthYear: number) {
-    this.firstName = firstName;
-    this.lastName = lastName;
-    this.birthYear = birthYear;
-  }
+interface IIndexInterface {
+  [key: string]: string | number;
+}
 
-  get fullName(): string {
-    return `${this.lastName} ${this.firstName}`;
-  }
+interface IInterface extends IIndexInterface {
+  name: string | number;
+}
 
-  set fullName(value: string) {
-    [this.lastName, this.firstName] = value.split(" ");
-  }
+//* Напишіть функцію, яка отримує об'єкт з індексною сигнатурою 
+//* і перевіряє, чи відповідають значення певних ключів певним критеріям (наприклад, чи всі значення є числами).
 
-  get age(): number {
-    return new Date().getFullYear() - this.birthYear;
-  }
+interface ISomeAnotherInterface {
+  [key: string]: any
+}
 
-  setGrade(subject: string, grade: number): void {
-    this.grades[subject] = grade;
-  }
-
-  markAttendance(present: boolean): void {
-    this.attendance.push(present);
-  }
-
-  getPerformanceRating(): number {
-    const gradeValues: any[] = Object.values(this.grades);
-
-    if (!gradeValues.length) {
-      return 0;
+function isSomeValueNumber(object: ISomeAnotherInterface): boolean {
+  for (let key in object) {
+    if (typeof object[key] !== 'number') {
+      return false;
     }
-
-    const averageGrade: number =
-      gradeValues.reduce((sum, grade) => sum + grade, 0) / gradeValues.length;
-
-    const attendancePercentage: number =
-      (this.attendance.filter((present) => present).length /
-        this.attendance.length) *
-      100;
-
-    return (averageGrade + attendancePercentage) / 2;
   }
+  return true;
 }
-
-console.log('start');
