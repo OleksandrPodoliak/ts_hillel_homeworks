@@ -1,126 +1,123 @@
-class School {
-  directions: Direction[] = [];
-
-  addDirection(direction: Direction): void {
-    this.directions.push(direction);
-  }
+interface IUser {
+  login: string;
+  password: string;
 }
 
-class Direction {
-  _name: string;
-  levels: Level[] = [];
+//* Вам потрібно створити тип DeepReadonly який буде робити доступними тільки для читання навіть властивості вкладених обʼєктів.
 
-  constructor(name: string) {
-    this._name = name;
-  }
-
-  get name(): string {
-    return this._name;
-  }
-
-  addLevel(level: Level): void {
-    this.levels.push(level);
-  }
+interface IAnotherUser extends IUser {
+  personalInfo: {
+    firstName: string;
+    secondName: string;
+    adress: {
+      country: string;
+      city: string;
+    };
+  };
 }
 
-class Level {
-  _name: string;
-  _program: string;
-  groups: Group[] = [];
+type DeepReadonly<T> = {
+  readonly [K in keyof T]: T[K] extends object ? DeepReadonly<T[K]> : T[K];
+};
 
-  constructor(name: string, program: string) {
-    this._name = name;
-    this._program = program;
-  }
+const user1: DeepReadonly<IAnotherUser> = {
+  login: 'somelogin',
+  password: 'somepassword',
+  personalInfo: {
+    firstName: 'John',
+    secondName: 'Doe',
+    adress: {
+      country: 'Ukraine',
+      city: 'Kyiv',
+    },
+  },
+};
 
-  get name(): string {
-    return this._name;
-  }
+// user.personalInfo.adress.city = "Zaporizhzhya";
 
-  get program(): string {
-    return this._program;
-  }
+//* Вам потрібно створити тип DeepRequireReadonly який буде робити доступними тільки для читання навіть властивості вкладених обʼєктів
+//* та ще й робити їх обовʼязковими.
 
-  addGroup(group: Group): void {
-    this.groups.push(group);
-  }
+interface IUserOptional extends IUser {
+  personalInfo?: {
+    firstName: string;
+    secondName: string;
+    adress?: {
+      country?: string;
+      city: string;
+    };
+  };
 }
 
-class Group {
-  directionName: string;
-  levelName: string;
-  _students: Student[] = [];
+type DeepRequireReadonly<T> = {
+  readonly [K in keyof T]-?: T[K] extends object
+    ? DeepRequireReadonly<T[K]>
+    : T[K];
+};
 
-  constructor(directionName: string, levelName: string) {
-    this.directionName = directionName;
-    this.levelName = levelName;
-  }
+const user2: DeepRequireReadonly<IUserOptional> = {
+  login: 'somelogin',
+  password: 'somepassword',
+  personalInfo: {
+    firstName: 'John',
+    secondName: 'Doe',
+    adress: {
+      country: 'Ukraine',
+      city: 'Kyiv',
+    },
+  },
+};
 
-  get students(): Student[] {
-    return this._students;
-  }
+// const user3: DeepRequireReadonly<IUserOptional> = {
+//   login: "somelogin",
+//   password: "somepassword",
+// };
 
-  addStudent(student: Student): void {
-    this._students.push(student);
-  }
+//* Вам потрібно створити тип UpperCaseKeys, який буде приводити всі ключі до верхнього регістру.
 
-  showPerformance(): Student[] {
-    return this._students.toSorted(
-      (a, b) => b.getPerformanceRating() - a.getPerformanceRating()
-    );
-  }
+type UpperCaseKeys<T> = {
+  [K in keyof T as Uppercase<K & string>]: T[K];
+};
+
+const user4: UpperCaseKeys<IUser> = {
+  LOGIN: 'somelogin',
+  PASSWORD: 'somepassword',
+};
+
+//* Створіть тип ObjectToPropertyDescriptor, який перетворює звичайний обʼєкт на обʼєкт де кожне value є дескриптором.
+
+interface IUserWithAge extends IUser {
+  age: number;
 }
 
-class Student {
-  firstName: string;
-  lastName: string;
-  birthYear: number;
-  grades: any = {};
-  attendance: boolean[] = [];
+interface PropertyDescriptorType<T> {
+  value: T;
+  writable: boolean;
+  configurable: boolean;
+  enumerable: boolean;
+};
 
-  constructor(firstName: string, lastName: string, birthYear: number) {
-    this.firstName = firstName;
-    this.lastName = lastName;
-    this.birthYear = birthYear;
-  }
+type PropertyDescriptorObject<T> = {
+  [K in keyof T]: PropertyDescriptorType<T[K]>;
+};
 
-  get fullName(): string {
-    return `${this.lastName} ${this.firstName}`;
-  }
-
-  set fullName(value: string) {
-    [this.lastName, this.firstName] = value.split(" ");
-  }
-
-  get age(): number {
-    return new Date().getFullYear() - this.birthYear;
-  }
-
-  setGrade(subject: string, grade: number): void {
-    this.grades[subject] = grade;
-  }
-
-  markAttendance(present: boolean): void {
-    this.attendance.push(present);
-  }
-
-  getPerformanceRating(): number {
-    const gradeValues: any[] = Object.values(this.grades);
-
-    if (!gradeValues.length) {
-      return 0;
-    }
-
-    const averageGrade: number =
-      gradeValues.reduce((sum, grade) => sum + grade, 0) / gradeValues.length;
-
-    const attendancePercentage: number =
-      (this.attendance.filter((present) => present).length /
-        this.attendance.length) *
-      100;
-
-    return (averageGrade + attendancePercentage) / 2;
-  }
-}
-
-console.log('start');
+const user5: PropertyDescriptorObject<UpperCaseKeys<IUserWithAge>> = {
+  LOGIN: {
+    value: 'somelogin',
+    writable: true,
+    configurable: true,
+    enumerable: true,
+  },
+  PASSWORD: {
+    value: 'somepassword',
+    writable: false,
+    configurable: false,
+    enumerable: false,
+  },
+  AGE: {
+    value: 21,
+    writable: false,
+    configurable: true,
+    enumerable: false,
+  },
+};
