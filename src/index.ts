@@ -17,7 +17,7 @@ interface IAnotherUser extends IUser {
 }
 
 type DeepReadonly<T> = {
-  readonly [K in keyof T]: T[K] extends object ? DeepReadonly<T[K]> : T[K];
+  readonly [K in keyof T]: DeepReadonly<T[K]>;
 };
 
 const user1: DeepReadonly<IAnotherUser> = {
@@ -33,7 +33,7 @@ const user1: DeepReadonly<IAnotherUser> = {
   },
 };
 
-// user.personalInfo.adress.city = "Zaporizhzhya";
+// user1.personalInfo.adress.city = "Zaporizhzhya";
 
 //* Вам потрібно створити тип DeepRequireReadonly який буде робити доступними тільки для читання навіть властивості вкладених обʼєктів
 //* та ще й робити їх обовʼязковими.
@@ -50,9 +50,7 @@ interface IUserOptional extends IUser {
 }
 
 type DeepRequireReadonly<T> = {
-  readonly [K in keyof T]-?: T[K] extends object
-    ? DeepRequireReadonly<T[K]>
-    : T[K];
+  readonly [K in keyof T]-?: DeepRequireReadonly<T[K]>;
 };
 
 const user2: DeepRequireReadonly<IUserOptional> = {
@@ -71,6 +69,13 @@ const user2: DeepRequireReadonly<IUserOptional> = {
 // const user3: DeepRequireReadonly<IUserOptional> = {
 //   login: "somelogin",
 //   password: "somepassword",
+//   personalInfo: {
+//     secondName: 'Doe',
+//     adress: {
+//       country: 'Ukraine',
+//       city: 'Kyiv',
+//     },
+//   },
 // };
 
 //* Вам потрібно створити тип UpperCaseKeys, який буде приводити всі ключі до верхнього регістру.
