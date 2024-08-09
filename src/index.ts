@@ -1,126 +1,102 @@
-class School {
-  directions: Direction[] = [];
+//* Вам потрібно створити умовний тип, що служить для встановлення типу, що повертається з функції. 
+//* Як параметр типу повинен обов'язково виступати функціональний тип.
 
-  addDirection(direction: Direction): void {
-    this.directions.push(direction);
+type FunctionReturnType<T> = T extends (...args: any[]) => infer R ? R : unknown /*never*/;
+
+//* Вам потрібно створити умовний тип, який приймає функціональний тип з одним параметром (або задовільним) та повертає кортеж,
+//* де перше значення - це тип, що функція повертає, а другий - тип її параметру
+
+type FunctionReturnAndFirstParamArrayType<T> = T extends (...args: [infer P, ...any[]]) => infer R ? [R, P] : [unknown, unknown] /*never*/;
+
+//* У вас є дві сутності - список фільмів і список категорій фільмів.
+//* Кожен фільм містить поля: назва, рік випуску, рейтинг, список нагород.
+//* Категорія містить поля: назва і фільми.
+//* У кожного списку є пошук за ім'ям (це, по суті, фільтрація), у списку фільмів є додаткова фільтрація за роком випуску,
+//* рейтингом і нагородами.
+//* У нас визначено три типи фільтрів:
+//* Фільтр відповідності має поле filter
+//* Фільтр діапазону має поле filter і filterTo
+//* Фільтр пошуку за значеннями має поле values
+//* Кожен список містить стан його фільтрів, який може бути змінений тільки методом applySearchValue або applyFiltersValue
+//* (за наявності додаткових фільтрів)
+//* Вам необхідно подумати про поділ вашого коду на різні сутності, інтерфеси і типи, щоб зробити ваше рішення типобезпечним.
+//* Реалізація всіх методів не є необхідною - це за бажанням.
+
+interface Movie {
+  name: string;
+  year: number;
+  rate: number;
+  awards: string[];
+}
+
+interface Category {
+  name: string;
+  movies: Movie[];
+}
+
+interface RangeFilter {
+  from: number;
+  to: number;
+}
+
+interface ValueSearchFilter<T> {
+  values: T[];
+}
+
+interface SearchableList<T> {
+  applySearchValue(search: string): T[];
+}
+
+interface FilterableList<T> {
+  applyFiltersValue(filters: Filters): T[];
+}
+
+interface Filters {
+  year?: RangeFilter;
+  rate?: RangeFilter;
+  awards?: ValueSearchFilter<string>;
+};
+
+class MovieList implements SearchableList<Movie>, FilterableList<Movie> {
+  private movies: Movie[];
+  private filters: Filters;
+
+  constructor(movies: Movie[]) {
+    this.movies = movies;
+    this.filters = {};
+  }
+
+  public setFilters(filters: Filters): void {
+    this.filters = filters;
+  }
+
+  public clearFilters(): void {
+    this.filters = {};
+  }
+
+  private filterMoviesByFilters(movies: Movie[]): Movie[] {
+    //.....fiter this.movies by filter properties
+    return this.movies;
+  }
+
+  public applySearchValue(query: string): Movie[] {
+    const filteredMoviesByName: Movie[] = this.movies.filter(() => !!query); //.....filter by query name
+    return this.filterMoviesByFilters(filteredMoviesByName);
+  }
+
+  public applyFiltersValue(): Movie[] {
+    return this.filterMoviesByFilters(this.movies);
   }
 }
 
-class Direction {
-  _name: string;
-  levels: Level[] = [];
+class CategoryList implements SearchableList<Category> {
+  private categories: Category[];
 
-  constructor(name: string) {
-    this._name = name;
+  constructor(categories: Category[]) {
+    this.categories = categories;
   }
 
-  get name(): string {
-    return this._name;
-  }
-
-  addLevel(level: Level): void {
-    this.levels.push(level);
+  public applySearchValue(query: string): Category[] {
+    return this.categories.filter(() => !!query); //.....filter by query name
   }
 }
-
-class Level {
-  _name: string;
-  _program: string;
-  groups: Group[] = [];
-
-  constructor(name: string, program: string) {
-    this._name = name;
-    this._program = program;
-  }
-
-  get name(): string {
-    return this._name;
-  }
-
-  get program(): string {
-    return this._program;
-  }
-
-  addGroup(group: Group): void {
-    this.groups.push(group);
-  }
-}
-
-class Group {
-  directionName: string;
-  levelName: string;
-  _students: Student[] = [];
-
-  constructor(directionName: string, levelName: string) {
-    this.directionName = directionName;
-    this.levelName = levelName;
-  }
-
-  get students(): Student[] {
-    return this._students;
-  }
-
-  addStudent(student: Student): void {
-    this._students.push(student);
-  }
-
-  showPerformance(): Student[] {
-    return this._students.toSorted(
-      (a, b) => b.getPerformanceRating() - a.getPerformanceRating()
-    );
-  }
-}
-
-class Student {
-  firstName: string;
-  lastName: string;
-  birthYear: number;
-  grades: any = {};
-  attendance: boolean[] = [];
-
-  constructor(firstName: string, lastName: string, birthYear: number) {
-    this.firstName = firstName;
-    this.lastName = lastName;
-    this.birthYear = birthYear;
-  }
-
-  get fullName(): string {
-    return `${this.lastName} ${this.firstName}`;
-  }
-
-  set fullName(value: string) {
-    [this.lastName, this.firstName] = value.split(" ");
-  }
-
-  get age(): number {
-    return new Date().getFullYear() - this.birthYear;
-  }
-
-  setGrade(subject: string, grade: number): void {
-    this.grades[subject] = grade;
-  }
-
-  markAttendance(present: boolean): void {
-    this.attendance.push(present);
-  }
-
-  getPerformanceRating(): number {
-    const gradeValues: any[] = Object.values(this.grades);
-
-    if (!gradeValues.length) {
-      return 0;
-    }
-
-    const averageGrade: number =
-      gradeValues.reduce((sum, grade) => sum + grade, 0) / gradeValues.length;
-
-    const attendancePercentage: number =
-      (this.attendance.filter((present) => present).length /
-        this.attendance.length) *
-      100;
-
-    return (averageGrade + attendancePercentage) / 2;
-  }
-}
-
-console.log('start');
