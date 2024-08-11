@@ -61,14 +61,14 @@ abstract class List<T> {
   }
 
   public applySearchValue(query: string): T[] {
-    return this.filterListByFiltersAndQuery(this.list, query);
+    return this.filterListByFiltersAndQuery(query);
   };
 
   public applyFiltersValue(): T[] {
-    return this.filterListByFiltersAndQuery(this.list);
+    return this.filterListByFiltersAndQuery();
   };
 
-  protected abstract filterListByFiltersAndQuery(list: T[], query?: string): T[];
+  protected abstract filterListByFiltersAndQuery(query?: string): T[];
 }
 
 class MovieList extends List<Movie> {
@@ -76,8 +76,8 @@ class MovieList extends List<Movie> {
     super(movies, {});
   }
 
-  protected filterListByFiltersAndQuery(list: Movie[], query?: string): Movie[] {
-    return list.filter(el => {
+  protected filterListByFiltersAndQuery(query?: string): Movie[] {
+    return this.list.filter(el => {
       //.....fiter list by filter properties
       //.....fiter list by name query properties
       if (query) {
@@ -94,8 +94,8 @@ class CategoryList extends List<Category> {
     super(categories, {});
   }
 
-  protected filterListByFiltersAndQuery(list: Category[], query?: string): Category[] {
-    return list.filter(el => {
+  protected filterListByFiltersAndQuery(query?: string): Category[] {
+    return this.list.filter(el => {
       //.....fiter list by filter properties
       //.....fiter list by name query properties
       if (query) {
