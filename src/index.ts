@@ -34,6 +34,12 @@ interface Category {
   movies: Movie[];
 }
 
+interface Filters {
+  year?: RangeFilter;
+  rate?: RangeFilter;
+  awards?: ValueSearchFilter<string>;
+};
+
 interface RangeFilter {
   from: number;
   to: number;
@@ -43,28 +49,8 @@ interface ValueSearchFilter<T> {
   values: T[];
 }
 
-interface SearchableList<T> {
-  applySearchValue(search: string): T[];
-}
-
-interface FilterableList<T> {
-  applyFiltersValue(filters: Filters): T[];
-}
-
-interface Filters {
-  year?: RangeFilter;
-  rate?: RangeFilter;
-  awards?: ValueSearchFilter<string>;
-};
-
-class MovieList implements SearchableList<Movie>, FilterableList<Movie> {
-  private movies: Movie[];
-  private filters: Filters;
-
-  constructor(movies: Movie[]) {
-    this.movies = movies;
-    this.filters = {};
-  }
+abstract class List<T> {
+  constructor(protected list: T[], protected filters: Filters) {}
 
   public setFilters(filters: Filters): void {
     this.filters = filters;
@@ -74,29 +60,49 @@ class MovieList implements SearchableList<Movie>, FilterableList<Movie> {
     this.filters = {};
   }
 
-  private filterMoviesByFilters(movies: Movie[]): Movie[] {
-    //.....fiter this.movies by filter properties
-    return this.movies;
+  public applySearchValue(query: string): T[] {
+    return this.filterListByFiltersAndQuery(this.list, query);
+  };
+
+  public applyFiltersValue(): T[] {
+    return this.filterListByFiltersAndQuery(this.list);
+  };
+
+  protected abstract filterListByFiltersAndQuery(list: T[], query?: string): T[];
+}
+
+class MovieList extends List<Movie> {
+  constructor(movies: Movie[]) {
+    super(movies, {});
   }
 
-  public applySearchValue(query: string): Movie[] {
-    const filteredMoviesByName: Movie[] = this.movies.filter(() => !!query); //.....filter by query name
-    return this.filterMoviesByFilters(filteredMoviesByName);
-  }
+  protected filterListByFiltersAndQuery(list: Movie[], query?: string): Movie[] {
+    return list.filter(el => {
+      //.....fiter list by filter properties
+      //.....fiter list by name query properties
+      if (query) {
+        return true
+      }
 
-  public applyFiltersValue(): Movie[] {
-    return this.filterMoviesByFilters(this.movies);
+      return true
+    });
   }
 }
 
-class CategoryList implements SearchableList<Category> {
-  private categories: Category[];
-
+class CategoryList extends List<Category> {
   constructor(categories: Category[]) {
-    this.categories = categories;
+    super(categories, {});
   }
 
-  public applySearchValue(query: string): Category[] {
-    return this.categories.filter(() => !!query); //.....filter by query name
+  protected filterListByFiltersAndQuery(list: Category[], query?: string): Category[] {
+    return list.filter(el => {
+      //.....fiter list by filter properties
+      //.....fiter list by name query properties
+      if (query) {
+        return true
+      }
+
+      return true
+    });
   }
 }
