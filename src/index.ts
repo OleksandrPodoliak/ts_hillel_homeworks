@@ -1,108 +1,141 @@
-//* Вам потрібно створити умовний тип, що служить для встановлення типу, що повертається з функції. 
-//* Як параметр типу повинен обов'язково виступати функціональний тип.
+//* Вам необхідно написати додаток Todo list. У списку нотаток повинні бути методи для додавання нового запису, 
+//* видалення, редагування та отримання повної інформації про нотатку за ідентифікатором, а так само отримання списку всіх нотаток.
+//* Крім цього, у користувача має бути можливість позначити нотаток, як виконаний, і отримання інформації про те, скільки всього нотаток
+//* у списку і скільки залишилося невиконаними. Нотатки не повинні бути порожніми.
+//* Кожний нотаток має назву, зміст, дату створення і редагування та статус. Нотатки бувають двох типів. Дефолтні та такі,
+//* які вимагають підтвердження при ридагуванні.
+//* Окремо необхідно розширити поведінку списку та додати можливість пошуку нотатка за ім'ям або змістом.
+//* Також окремо необхідно розширити список можливістю сортування нотаток за статусом або часом створення.
 
-type FunctionReturnType<T> = T extends (...args: any[]) => infer R ? R : unknown /*never*/;
+import { v4 as uuidv4 } from 'uuid';
 
-//* Вам потрібно створити умовний тип, який приймає функціональний тип з одним параметром (або задовільним) та повертає кортеж,
-//* де перше значення - це тип, що функція повертає, а другий - тип її параметру
-
-type FunctionReturnAndFirstParamArrayType<T> = T extends (...args: [infer P, ...any[]]) => infer R ? [R, P] : [unknown, unknown] /*never*/;
-
-//* У вас є дві сутності - список фільмів і список категорій фільмів.
-//* Кожен фільм містить поля: назва, рік випуску, рейтинг, список нагород.
-//* Категорія містить поля: назва і фільми.
-//* У кожного списку є пошук за ім'ям (це, по суті, фільтрація), у списку фільмів є додаткова фільтрація за роком випуску,
-//* рейтингом і нагородами.
-//* У нас визначено три типи фільтрів:
-//* Фільтр відповідності має поле filter
-//* Фільтр діапазону має поле filter і filterTo
-//* Фільтр пошуку за значеннями має поле values
-//* Кожен список містить стан його фільтрів, який може бути змінений тільки методом applySearchValue або applyFiltersValue
-//* (за наявності додаткових фільтрів)
-//* Вам необхідно подумати про поділ вашого коду на різні сутності, інтерфеси і типи, щоб зробити ваше рішення типобезпечним.
-//* Реалізація всіх методів не є необхідною - це за бажанням.
-
-interface Movie {
-  name: string;
-  year: number;
-  rate: number;
-  awards: string[];
+enum TaskStatus {
+  Inwork = 'inwork',
+  Done = 'done',
 }
 
-interface Category {
-  name: string;
-  movies: Movie[];
+interface ITask {
+  id: string;
+  title: string;
+  content: string;
+  createDate: Date;
+  status: TaskStatus;
+  confirm: boolean;
+  toDoneStatus(): void;
+  edit(title: string, content: string): void;
 }
 
-interface Filters {
-  year?: RangeFilter;
-  rate?: RangeFilter;
-  awards?: ValueSearchFilter<string>;
-};
+class Task implements ITask {
+  public id;
+  public createDate;
+  public status: TaskStatus;
 
-interface RangeFilter {
-  from: number;
-  to: number;
-}
-
-interface ValueSearchFilter<T> {
-  values: T[];
-}
-
-abstract class List<T> {
-  constructor(protected list: T[], protected filters: Filters) {}
-
-  public setFilters(filters: Filters): void {
-    this.filters = filters;
+  constructor(
+    public title: string,
+    public content: string,
+    public confirm: boolean = false,
+  ) {
+    if (!title || !content) {
+      throw new Error('Empty content or title');
+    }
+    
+    this.id = uuidv4();
+    this.createDate = new Date();
+    this.status = TaskStatus.Inwork;
   }
 
-  public clearFilters(): void {
-    this.filters = {};
+  public toDoneStatus(): void {
+    this.status = TaskStatus.Done;
   }
 
-  public applySearchValue(query: string): T[] {
-    return this.filterListByFiltersAndQuery(query);
-  };
+  public edit(title: string, content: string): void {
+    if (!title || !content) {
+      throw new Error('Empty content or title');
+    }
 
-  public applyFiltersValue(): T[] {
-    return this.filterListByFiltersAndQuery();
-  };
-
-  protected abstract filterListByFiltersAndQuery(query?: string): T[];
-}
-
-class MovieList extends List<Movie> {
-  constructor(movies: Movie[]) {
-    super(movies, {});
-  }
-
-  protected filterListByFiltersAndQuery(query?: string): Movie[] {
-    return this.list.filter(el => {
-      //.....fiter list by filter properties
-      //.....fiter list by name query properties
-      if (query) {
-        return true
+    if (this.confirm) {
+      if (!confirm("Are you sure?")) {
+        return;
       }
+    }
 
-      return true
-    });
+    this.title = title;
+    this.content = content;
   }
 }
 
-class CategoryList extends List<Category> {
-  constructor(categories: Category[]) {
-    super(categories, {});
+class TodoList {
+  private tasks: Task[] = [];
+
+  public create(title: string, content: string, confirm: boolean = false): Task {
+    if (!title || !content) {
+      throw new Error('Empty content or title');
+    }
+
+    const task = new Task(title, content, confirm);
+    this.tasks.push(task);
+    return task;
   }
 
-  protected filterListByFiltersAndQuery(query?: string): Category[] {
-    return this.list.filter(el => {
-      //.....fiter list by filter properties
-      //.....fiter list by name query properties
-      if (query) {
-        return true
-      }
+  public delete(id: string): void {
+    this.tasks = this.tasks.filter(task => task.id !== id);
+  }
 
-      return true
-    });
+  public editById(id: string, title: string, content: string): void {
+    if (!title || !content) {
+      throw new Error('Empty content or title');
+    }
+
+    const task = this.getTaskById(id);
+    
+    if (task) {
+      task.edit(title, content);
+    } else {
+      throw new Error("Can't find task by id");
+    }
+  }
+
+  public toDoneStatusById(id: string): void {
+    const task = this.getTaskById(id);
+    
+    if (task) {
+      task.toDoneStatus();
+    } else {
+      throw new Error("Can't find task by id");
+    }
+  }
+
+  public getTaskById(id: string): Task | undefined {
+    return this.tasks.find(task => task.id === id);
+  }
+
+  public getAllTasks(): Task[] {
+    return this.tasks;
+  }
+
+  public getTasksCount(): number {
+    return this.tasks.length;
+  }
+
+  public getInWorkTasksCount(): number {
+    return this.tasks.filter(task => task.status === TaskStatus.Inwork).length;
+  }
+
+  public searchTasks(query: string): Task[] {
+    return this.tasks.filter(task => {
+        return (
+          task.title.toLowerCase().includes(query.toLowerCase())
+          || task.content.toLowerCase().includes(query.toLowerCase())
+        )
+      }
+    );
+  }
+
+  public sortTasksByStatus(): Task[] {
+    return this.tasks.sort((a, b) => a.status.localeCompare(b.status));
+  }
+
+  public sortTasksByCreateDateParam(): Task[] {
+    return this.tasks.sort((a, b) => b.createDate.getTime() - a.createDate.getTime());
   }
 }
