@@ -23,20 +23,22 @@
 //* * Логіка перевірки можливих ходів і захоплень буде реалізована у вигляді функцій або методів класів.
 //* Приділіть особливи увагу декомпозиції на окремі класи та їх звʼязок.
 
-enum CheckerColor {
+import { v4 as uuidv4 } from 'uuid';
+
+export enum CheckerColor {
   BLACK = 'black',
   WHITE = 'white',
 }
 
-type BoardSize = 8;
-type CellBoardType = Checker | null;
-type BoardType = CellBoardType[][];
+export type BoardSize = 8;
+export type CellBoardType = Checker | null;
+export type BoardType = CellBoardType[][];
 
-interface IChecker {
+export interface IChecker {
   color: CheckerColor,
 };
 
-interface IBoard {
+export interface IBoard {
   board: BoardType,
   size: BoardSize,
   initBoard(): BoardType,
@@ -46,7 +48,8 @@ interface IBoard {
   isOutOfBoard(x: number, y: number): boolean,
 };
 
-interface IGame {
+export interface IGame {
+  id: string,
   board: Board,
   currentPlayer: CheckerColor,
   isValidMove(fromX: number, fromY: number, toX: number, toY: number): boolean,
@@ -55,11 +58,11 @@ interface IGame {
   checkForWin(): boolean,
 };
 
-class Checker implements IChecker {
+export class Checker implements IChecker {
   constructor(public readonly color: CheckerColor) {}
 }
 
-class Board implements IBoard {
+export class Board implements IBoard {
   public readonly board: BoardType;
   public readonly size: BoardSize = 8;
 
@@ -120,16 +123,22 @@ class Board implements IBoard {
   }
 }
 
-class Game implements IGame {
+export class Game implements IGame {
+  public readonly id: string;
   public readonly board: Board;
   public currentPlayer: CheckerColor;
 
   constructor() {
+    this.id = uuidv4();
     this.board = new Board();
     this.currentPlayer = CheckerColor.WHITE;
   }
 
   public isValidMove(fromX: number, fromY: number, toX: number, toY: number): boolean {
+    if (this.board.isOutOfBoard(toX, toY)) {
+      return false;
+    }
+
     const checker: CellBoardType = this.board.getChecker(fromX, fromY);
 
     if (!checker || checker.color !== this.currentPlayer) {
@@ -140,8 +149,8 @@ class Game implements IGame {
     const yDiff: number = Math.abs(fromY - toY);
 
     if (
-      checker.color === CheckerColor.WHITE && toX <= fromX
-      || checker.color === CheckerColor.BLACK && toX >= fromX
+      checker.color === CheckerColor.WHITE && toX >= fromX
+      || checker.color === CheckerColor.BLACK && toX <= fromX
     ) {
       return false;
     }
